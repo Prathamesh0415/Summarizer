@@ -28,6 +28,12 @@ const UserSchema = new Schema(
       default: false,
     },
 
+    emailVerificationToken: String,
+    emailVerificationExpiry: String,
+
+    passwordResetToken: String,
+    passwordResetExpires: String,
+
     teams: [
       {
         type: Types.ObjectId,

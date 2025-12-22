@@ -1,0 +1,30 @@
+import dbConnect from "@/lib/db";
+import { User } from "@/models/User";
+import { hashPassword } from "@/lib/auth/password";
+import { NextResponse } from "next/server";
+
+export async function POST(req: Request) {
+  await dbConnect();
+
+  const { token, newPassword } = await req.json();
+
+  const user = await User.findOne({
+    passwordResetToken: token,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return NextResponse.json(
+      { error: "Invalid or expired token" },
+      { status: 400 }
+    );
+  }
+
+  user.passwordHash = await hashPassword(newPassword);
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+
+  await user.save();
+
+  return NextResponse.json({ message: "Password reset successful" });
+}
