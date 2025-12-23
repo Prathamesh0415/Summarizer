@@ -29,10 +29,10 @@ const UserSchema = new Schema(
     },
 
     emailVerificationToken: String,
-    emailVerificationExpiry: String,
+    emailVerificationExpiry: Date,
 
     passwordResetToken: String,
-    passwordResetExpires: String,
+    passwordResetExpires: Date,
 
     teams: [
       {
