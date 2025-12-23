@@ -48,6 +48,17 @@ export async function createSession({
     await redis.sadd(`user_sessions:${userId}`, sessionId)
 }
 
+export async function deleteSession(sessionId: string, userId: string){
+    
+    const pipeline = redis.pipeline()
+    
+    pipeline.del(`refresh:${sessionId}`)
+    pipeline.del(`session:${sessionId}`)
+    pipeline.srem(`user_sessions:${userId}`, sessionId)
+
+    await pipeline.exec()
+}
+
 export async function deleteAllSessions(userId: string){
     const sessionIds = await redis.smembers(`user_sessions:${userId}`)
 
