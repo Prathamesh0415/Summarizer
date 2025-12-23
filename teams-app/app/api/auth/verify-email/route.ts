@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { User } from "@/models/User";
 import dbConnect from "@/lib/db";
+import { logAuditEvent } from "@/lib/audit/logger";
 
 export async function GET(req: NextRequest){
     await dbConnect()
@@ -32,6 +33,11 @@ export async function GET(req: NextRequest){
     user.emailVerificationExpiry = undefined
 
     await user.save()
+
+    await logAuditEvent({
+        userId: user._id.toString(),
+        action: "EMAIL_VERIFIED"
+    })
 
     return NextResponse.json({
         success: true,

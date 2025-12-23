@@ -5,6 +5,7 @@ import { verifyPassword } from "@/lib/auth/password";
 import crypto from "crypto"
 import { createSession, generateRefereshToken } from "@/lib/auth/session";
 import { signAccessToken } from "@/lib/auth/jwt";
+import { logAuditEvent } from "@/lib/audit/logger";
 
 export async function POST(req: NextRequest){
     await dbConnect()
@@ -27,6 +28,14 @@ export async function POST(req: NextRequest){
 
     const isValid = await verifyPassword(password, user.passwordHash)
     if(!isValid){
+        
+        await logAuditEvent({
+            action: "LOGIN_FAILED",
+            ip: req.headers.get("x-forwarded-for"),
+            userAgent: req.headers.get("user-agent"),
+            metadata: { email },
+        });
+
         return NextResponse.json(
             {error: "Invalid credentials"},
             {status: 401}
@@ -54,6 +63,13 @@ export async function POST(req: NextRequest){
         userId: user._id.toString(),
         role: user.role,
         sessionId
+    })
+
+    await logAuditEvent({
+        userId: user._id.toString(),
+        action: "LOGIN_SUCCESS",
+        ip: req.headers.get("x-forwarded-for"),
+        userAgent: req.headers.get("user-agent")
     })
 
     return NextResponse.json({

@@ -2,6 +2,7 @@ import dbConnect from "@/lib/db";
 import { User } from "@/models/User";
 import { hashPassword } from "@/lib/auth/password";
 import { NextResponse } from "next/server";
+import { logAuditEvent } from "@/lib/audit/logger";
 
 export async function POST(req: Request) {
   await dbConnect();
@@ -25,6 +26,12 @@ export async function POST(req: Request) {
   user.passwordResetExpires = undefined;
 
   await user.save();
+
+  await logAuditEvent({
+    userId: user._id.toString(),
+    action: "PASSWORD_RESET"
+  })
+
 
   return NextResponse.json({ message: "Password reset successful" });
 }
