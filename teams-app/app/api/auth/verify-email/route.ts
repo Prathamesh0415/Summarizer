@@ -8,9 +8,12 @@ export async function GET(req: NextRequest){
         await dbConnect()
 
         const { searchParams } = new URL(req.url)
+        //console.log(searchParams)
         const token = searchParams.get("token")
+        //console.log(token)
 
         if(!token) {
+            //console.log("hello")
             return NextResponse.json(
                 {error: "Invalid token"},
                 {status: 400}
@@ -19,10 +22,11 @@ export async function GET(req: NextRequest){
 
         const user = await User.findOne({
             emailVerificationToken: token,
-            emailVerifictionExpiry: { $gt: Date.now() }
+            emailVerificationExpiry: { $gt: Date.now() }
         })
 
         if(!user){
+            console.log("hello")
             return NextResponse.json(
                 {error: "Token expired or invalid"},
                 {status: 400}

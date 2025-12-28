@@ -4,6 +4,7 @@ import { User } from "@/models/User";
 import crypto from "crypto"
 import { rateLimit } from "@/lib/security/rateLimit";
 import { hashToken } from "@/lib/auth/session";
+import { sendPasswordResetEmail } from "@/lib/mail";
 
 export async function POST(req: NextRequest){
     try{
@@ -38,12 +39,11 @@ export async function POST(req: NextRequest){
 
         const token = crypto.randomBytes(32).toString("hex")
 
-        user.passwordResetToken = hashToken(token)
+        user.passwordResetToken = token
         user.passwordResetExpires = Date.now() + 15 * 60 * 1000
         await user.save()
 
-        //TODO: Reset pass email
-        console.log("send the reset password email")
+        await sendPasswordResetEmail(email, token)
 
         return NextResponse.json({
             success: true,

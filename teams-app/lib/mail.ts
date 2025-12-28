@@ -6,11 +6,11 @@ const domain = process.env.NEXT_PUBLIC_APP_URL
 
 export async function sendVerificationEmail(email: string, token: string){
     try{
-
+    
         const confirmLink = `${domain}/verify-email?token=${token}`
 
         await resend.emails.send({
-            from: "",
+            from: "onboarding@resend.dev",
             to: email,
             subject: "Confirm your email",
             html: `<p>Click <a href="${confirmLink}">here</a> to verify email. </p>`
@@ -25,10 +25,12 @@ export async function sendPasswordResetEmail(email: string, token: string){
 
         const resetLink = `${domain}/reset-password?token=${token}`
 
+        console.log("hello")
+
         await resend.emails.send({
-            from: "",
+            from: "onboarding@resend.dev",
             to: email,
-            subject: "Confirm your email",
+            subject: "Reset your email",
             html: `<p>Click <a href="${resetLink}">here</a> to reset password. </p>`
         })
 

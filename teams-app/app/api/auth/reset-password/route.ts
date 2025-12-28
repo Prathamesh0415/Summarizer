@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
         const user = await User.findOne({
           passwordResetToken: token,
-          passwordResetExpires: { $gt: Date.now() },
+          //passwordResetExpires: { $gt: Date.now() },
         });
         if (!user) {
           return NextResponse.json(

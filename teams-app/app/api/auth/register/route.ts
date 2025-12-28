@@ -6,6 +6,7 @@ import crypto from "crypto";
 import { rateLimit } from "@/lib/security/rateLimit";
 import { logAuditEvent } from "@/lib/audit/logger";
 import { loginSchema } from "@/lib/validators/auth"; // Reusing the same schema for email/pass rules
+import { sendVerificationEmail } from "@/lib/mail";
 
 export async function POST(req: NextRequest){
     try{
@@ -79,8 +80,7 @@ export async function POST(req: NextRequest){
             metadata: { email }
         });
 
-        // TODO: Email verification sending logic here
-        console.log(`Verification Token for ${email}: ${token}`);
+        await sendVerificationEmail(email, token)
 
         return NextResponse.json({
             success: true,
