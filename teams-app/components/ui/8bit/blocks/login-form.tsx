@@ -94,7 +94,7 @@ export default function LoginPage({type}: LoginPageProps) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <div className="min-h-screen flex items-center justify-center  p-4">
       <div className={cn("flex flex-col gap-6 w-full max-w-md")}>
         <Card>
           <CardHeader>
