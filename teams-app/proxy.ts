@@ -28,7 +28,7 @@ export async function proxy(req: NextRequest) {
         // 3. Set headers for the downstream API route
         const requestHeaders = new Headers(req.headers);
         requestHeaders.set("x-user-id", payload.userId);
-        requestHeaders.set("x-user-role", payload.role);
+        //requestHeaders.set("x-user-role", payload.role);
         requestHeaders.set("x-session-id", payload.sessionId);
         
         // 4. Continue the request with the new headers
