@@ -43,6 +43,7 @@ const UserSchema = new Schema(
 
     planTier:{
       type: String,
+      default: "free",
       enum: ["free", "standard", "pro", "enterprise"]
     },
 
