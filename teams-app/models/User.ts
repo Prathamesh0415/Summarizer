@@ -34,6 +34,23 @@ const UserSchema = new Schema(
     passwordResetToken: String,
     passwordResetExpires: Date,
 
+    stripeCustomerId: {
+      type: String
+    },
+    stripeSubscriptionId: {
+      type: String
+    },
+
+    planTier:{
+      type: String,
+      enum: ["free", "standard", "pro", "enterprise"]
+    },
+
+    credits: {
+      type: Number,
+      default: 5
+    }
+
     // teams: [
     //   {
     //     type: Types.ObjectId,
