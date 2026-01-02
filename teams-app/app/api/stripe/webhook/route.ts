@@ -9,7 +9,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
 
 const getCreditsForPrice = (priceId: string) => {
-  // Make sure these match your ONE-TIME price IDs from Stripe
+
   const plans = PLANS;
 
   // 1. Get all plans as an array: [{priceId: '...', credits: 100}, ...]
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
       // CHANGE 2: Use $inc to ADD to existing credits instead of replacing them
       await User.findByIdAndUpdate(userId, {
         $inc: { credits: credits }, // Increment operator
-        planTier: name, // Optional: Update their "Badge" to the latest pack bought
+        planName: name, // Optional: Update their "Badge" to the latest pack bought
         // Note: We don't save subscriptionId anymore
       });
     }

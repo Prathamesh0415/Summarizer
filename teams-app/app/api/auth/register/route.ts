@@ -64,7 +64,9 @@ export async function POST(req: NextRequest){
         const user = await User.create({
             email,
             passwordHash,
-            emailVerified: false
+            emailVerified: false,
+            planName: "free"
+
         });
 
         const token = crypto.randomBytes(32).toString("hex");

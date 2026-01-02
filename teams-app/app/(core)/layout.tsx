@@ -1,7 +1,6 @@
-// app/(app)/layout.tsx
 "use client"
 
-import React from "react";
+import React, { useState } from "react";
 import { 
   Search, 
   Plus, 
@@ -27,7 +26,7 @@ import {
 } from "@/components/ui/8bit/dropdown-menu";
 import Link from "next/link";
 import { useFetch } from "@/hooks/useFetch";
-import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 
 export default function AppLayout({
@@ -38,31 +37,35 @@ export default function AppLayout({
     const fetchWithAuth = useFetch()
     const { setAccessToken } = useAuth()
     const router = useRouter()
+    
+    // 1. STATE FOR SIDEBAR
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
     const handleLogout = async () => {
     try {
-      // 1. Call Backend to clear httpOnly cookies (refresh token)
-      // We use fetchWithAuth to ensure the request is authenticated if needed
       await fetchWithAuth("/api/protected/auth/logout", {
         method: "POST",
       });
     } catch (error) {
       console.error("Logout request failed, forcing client logout", error);
     } finally {
-      // 2. Clear Client State (Always run this, even if API fails)
       setAccessToken(null);
-      
-      // 3. Redirect to Home
       router.push("/");
     }
   };
+
   return (
     <div className="flex min-h-screen bg-background font-mono">
       
-      {/* 1. FIXED SIDEBAR (Hidden on mobile, Visible on desktop) */}
-      <DesktopSidebar className="hidden md:flex h-screen sticky top-0" />
+      {/* 1. FIXED SIDEBAR with Collapse Props */}
+      <DesktopSidebar 
+        className="hidden md:flex h-screen sticky top-0" 
+        isCollapsed={isSidebarCollapsed}
+        toggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      />
 
       {/* 2. MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen transition-all duration-300">
         
         {/* SHARED HEADER */}
         <header className="sticky top-0 z-50 flex h-20 items-center justify-between border-b-4 border-muted px-6 md:px-10 bg-background/95 backdrop-blur">
@@ -89,14 +92,13 @@ export default function AppLayout({
             </Link>
 
             <Button 
-        variant="ghost" 
-        onClick={handleLogout}
-        className="w-40 justify-start gap-3 mt-2 text-red-600 hover:bg-red-50 hover:text-red-700 hover:underline"
-      >
-        <LogOut size={18} />
-        Log Out
-      </Button>
-    
+                variant="ghost" 
+                onClick={handleLogout}
+                className="w-40 justify-start gap-3 mt-2 text-red-600 hover:bg-red-50 hover:text-red-700 hover:underline"
+            >
+                <LogOut size={18} />
+                Log Out
+            </Button>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -113,13 +115,13 @@ export default function AppLayout({
                 <DropdownMenuItem className="cursor-pointer"><User className="mr-2 h-4 w-4" /> Profile</DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer"><Settings className="mr-2 h-4 w-4" /> Settings</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer text-red-600"><LogOut className="mr-2 h-4 w-4" /> Log out</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600"><LogOut className="mr-2 h-4 w-4" /> Log out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </header>
 
-        {/* PAGE CONTENT INJECTED HERE */}
+        {/* PAGE CONTENT */}
         <main className="flex-1 p-6 md:p-10">
           <div className="mx-auto max-w-6xl">
             {children}
