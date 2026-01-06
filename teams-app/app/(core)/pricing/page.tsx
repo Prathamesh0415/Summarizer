@@ -109,7 +109,7 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="min-h-screen font-mono bg-[#f0f0f0] dark:bg-zinc-950 flex flex-col items-center py-16 px-4 relative overflow-hidden transition-colors duration-300">
+    <div className="min-h-screen font-mono bg-[#f0f0f0] dark:bg-zinc-950 flex flex-col items-center py-10 px-4 relative overflow-hidden transition-colors duration-300">
       
       {/* Background Pattern (Adaptive) */}
       <div className="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" 
@@ -119,7 +119,7 @@ export default function PricingPage() {
       {errorMsg && <RetroPopup message={errorMsg} onClose={() => setErrorMsg("")} />}
 
       {/* HEADER */}
-      <div className="relative z-10 text-center max-w-2xl mb-16 space-y-6">
+      <div className="relative z-10 text-center max-w-2xl mb-25 space-y-6">
         <Badge variant="outline" className="bg-white dark:bg-zinc-900 text-black dark:text-white border-2 border-black dark:border-white px-4 py-1.5 text-sm shadow-[4px_4px_0px_0px_#000] dark:shadow-[4px_4px_0px_0px_#fff]">
           NO SUBSCRIPTIONS • ONE-TIME PAYMENT
         </Badge>
@@ -216,11 +216,11 @@ export default function PricingPage() {
                   disabled={!!loadingId}
                 >
                   {loadingId === key ? (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <Loader2 className="h-5 w-5 animate-spin" /> Processing...
                     </div>
                   ) : (
-                    <>Buy {plan.name}</>
+                    <>Buy</>
                   )}
                 </Button>
               </CardFooter>

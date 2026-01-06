@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { usePathname } from "next/navigation"; // <--- 1. Import usePathname
 import {
   LayoutDashboard,
   FileText,
@@ -18,9 +19,6 @@ import { ScrollArea } from "@/components/ui/8bit/scroll-area";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/8bit/card";
 import {
   Sheet,
@@ -30,42 +28,79 @@ import {
   SheetTrigger,
 } from "@/components/ui/8bit/sheet";
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext"; // <--- 1. Import Auth Context
+import { useAuth } from "@/context/AuthContext"; 
 
-// 1. The Menu Items (Updated to handle collapse state)
-export function SidebarNav({ isCollapsed }: { isCollapsed?: boolean }) {
-  // Helper to determine button classes based on collapse state
+// --- 1. Helper Component for Active Links ---
+// This handles the "Active State" logic so you don't repeat it 4 times
+interface NavButtonProps {
+  href: string;
+  label: string;
+  icon: React.ElementType; // Type for Lucide icons
+  isCollapsed?: boolean;
+}
+
+function NavButton({ href, label, icon: Icon, isCollapsed }: NavButtonProps) {
+  const pathname = usePathname();
+  const isActive = pathname === href;
+
   const btnClass = `w-full gap-3 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all ${
-    isCollapsed ? "justify-center px-0" : "justify-start"
+    isCollapsed ? "justify-center px-0" : "justify-start px-4"
+  } ${
+    isActive
+      ? "bg-yellow-400 text-black hover:bg-yellow-500" // <--- ACTIVE STYLE
+      : "bg-black text-white hover:bg-green-100 hover:text-black"       // <--- INACTIVE STYLE
   }`;
 
   return (
+    <Link href={href} className="w-full">
+      <Button variant="default" className={btnClass} title={label}>
+        <Icon size={18} className="shrink-0" />
+        {!isCollapsed && (
+          <span className="whitespace-nowrap overflow-hidden text-ellipsis">
+            {label}
+          </span>
+        )}
+      </Button>
+    </Link>
+  );
+}
+
+// --- 2. The Menu Items ---
+export function SidebarNav({ isCollapsed }: { isCollapsed?: boolean }) {
+  return (
     <nav className="grid gap-2 p-4">
-      <Link href="/dashboard">
-        <Button variant="default" className={btnClass} title="Dashboard">
-          <LayoutDashboard size={18} />
-          {!isCollapsed && <span>Dashboard</span>}
-        </Button>
-      </Link>
+      <NavButton 
+        href="/dashboard" 
+        label="Dashboard" 
+        icon={LayoutDashboard} 
+        isCollapsed={isCollapsed} 
+      />
       
-      <Link href="/my-summaries">
-        <Button variant="default" className={btnClass} title="My Summaries">
-          <FileText size={18} />
-          {!isCollapsed && <span>My Summaries</span>}
-        </Button>
-      </Link>
+      <NavButton 
+        href="/my-summaries" 
+        label="My Summaries" 
+        icon={FileText} 
+        isCollapsed={isCollapsed} 
+      />
       
-      <Link href="/summarize">
-        <Button variant="default" className={btnClass} title="Summarize">
-          <Plus size={18} />
-          {!isCollapsed && <span>Summarize</span>}
-        </Button>
-      </Link>
+      <NavButton 
+        href="/summarize" 
+        label="Summarize" 
+        icon={Plus} 
+        isCollapsed={isCollapsed} 
+      />
+
+      <NavButton 
+        href="/pricing" 
+        label="Plans" 
+        icon={CreditCard} 
+        isCollapsed={isCollapsed} 
+      />
     </nav>
   );
 }
 
-// 2. The Usage Card (Updated with Dynamic Data)
+// --- 3. The Usage Card ---
 export function SidebarUsage({ isCollapsed }: { isCollapsed?: boolean }) {
   const { user, isLoading } = useAuth();
 
@@ -97,7 +132,7 @@ export function SidebarUsage({ isCollapsed }: { isCollapsed?: boolean }) {
             size="sm" 
             className="w-full h-9 border-2 border-black bg-white hover:bg-green-100 text-black font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
           >
-            Get More Credits
+            Add Credits
           </Button>
 
         </CardContent>
@@ -106,7 +141,7 @@ export function SidebarUsage({ isCollapsed }: { isCollapsed?: boolean }) {
   );
 }
 
-// 3. Desktop Sidebar Component
+// --- 4. Desktop Sidebar Component ---
 interface DesktopSidebarProps {
   className?: string;
   isCollapsed: boolean;      
@@ -123,7 +158,7 @@ export function DesktopSidebar({ className, isCollapsed, toggleSidebar }: Deskto
       {/* Header with Toggle Button */}
       <div className={`flex h-20 items-center border-b-4 border-muted bg-background px-4 ${isCollapsed ? "justify-center" : "justify-between"}`}>
         
-        {/* Logo (Hide text if collapsed) */}
+        {/* Logo */}
         <div className="flex items-center gap-3">
           <div className="bg-primary text-primary-foreground p-1.5 rounded-sm border-2 border-black shrink-0">
             <BrainCircuit size={20} />
@@ -159,27 +194,30 @@ export function DesktopSidebar({ className, isCollapsed, toggleSidebar }: Deskto
   );
 }
 
-// 4. Mobile Sidebar
+// --- 5. Mobile Sidebar ---
 export function MobileSidebar() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="md:hidden border-2 border-black">
+        <Button variant="outline" size="icon" className="md:hidden border-2 border-black fixed top-4 left-4 z-50 bg-white">
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-72 p-0 flex flex-col">
+      <SheetContent side="left" className="w-72 p-0 flex flex-col border-r-4 border-black">
         <SheetHeader className="h-20 flex items-center justify-center border-b-4 border-muted bg-background">
           <SheetTitle className="flex items-center gap-3">
-            <BrainCircuit size={20} /> Summ.AI
+            <div className="bg-primary text-primary-foreground p-1.5 rounded-sm border-2 border-black">
+               <BrainCircuit size={20} />
+            </div>
+            <span>Summ.AI</span>
           </SheetTitle>
         </SheetHeader>
         
         <ScrollArea className="flex-1">
-          <SidebarNav />
+          <SidebarNav isCollapsed={false} />
         </ScrollArea>
 
-        <SidebarUsage />
+        <SidebarUsage isCollapsed={false} />
       </SheetContent>
     </Sheet>
   );

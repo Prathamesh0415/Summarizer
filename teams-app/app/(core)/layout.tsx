@@ -130,9 +130,12 @@ export default function AppLayout({
                     {user ? (
                         <div className="flex flex-col space-y-1">
                             <span className="font-bold">{user.username}</span>
-                            <span className="text-xs font-normal text-muted-foreground">{user.email}</span>
+                            <span className="text-xs font-normal text-muted-foreground break-all">{user.email}</span>
                             <span className="text-xs font-bold text-green-600 pt-1">
-                                {user.planName} • {user.credits} Credits
+                              {user.planName} Plan
+                            </span>
+                            <span className="text-xs font-bold text-green-600 pt-1">
+                              {user.credits} Credits
                             </span>
                         </div>
                     ) : (
@@ -140,8 +143,6 @@ export default function AppLayout({
                     )}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer"><User className="mr-2 h-4 w-4" /> Profile</DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer"><Settings className="mr-2 h-4 w-4" /> Settings</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600"><LogOut className="mr-2 h-4 w-4" /> Log out</DropdownMenuItem>
               </DropdownMenuContent>
