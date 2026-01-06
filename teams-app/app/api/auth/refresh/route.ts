@@ -114,7 +114,8 @@ export async function POST(req: NextRequest){
                 userId: userId,
                 email: user.email,
                 credits: user.credits,
-                planName: user.planName
+                planName: user.planName,
+                totalSummaries: user.totalSummaries
             }
             // Note: We DO NOT send refreshToken in body anymore
         });

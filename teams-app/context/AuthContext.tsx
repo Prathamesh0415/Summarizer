@@ -8,6 +8,7 @@ interface User {
     username: string;
     credits: number;
     planName: string
+    totalSummaries: Number
     // add other fields you need like 'avatarUrl', 'role', etc.
 }
 

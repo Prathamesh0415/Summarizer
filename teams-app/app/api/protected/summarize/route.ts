@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     // --- HELPER: Atomic Credit Deduction ---
     const deductCredit = async (uid: string) => {
       // $inc is atomic: prevents race conditions if user spams clicks
-      await User.findByIdAndUpdate(uid, { $inc: { credits: -1 } });
+      await User.findByIdAndUpdate(uid, { $inc: { credits: -1, totalSummaries: 1 } });
       console.log(`💰 Credit deducted for User ${uid}`);
     };
 
