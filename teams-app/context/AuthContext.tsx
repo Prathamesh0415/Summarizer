@@ -8,13 +8,13 @@ interface User {
     username: string;
     credits: number;
     planName: string
-    totalSummaries: Number
-    // add other fields you need like 'avatarUrl', 'role', etc.
+    totalSummaries: number
 }
 
 interface AuthContextType {
     accessToken: string | null;
     user: User | null;
+    setUser: React.Dispatch<React.SetStateAction<User | null>>
     setAccessToken: (token: string | null) => void;
     isLoading: boolean; // Add loading state so you don't redirect while checking auth
 }
@@ -60,7 +60,7 @@ export function AuthProvider({ children } : {children: ReactNode}){
     }, []);
 
     return (
-        <AuthContext.Provider value={{ accessToken, user, setAccessToken, isLoading }}>
+        <AuthContext.Provider value={{ accessToken, user, setUser, setAccessToken, isLoading }}>
             {children}
         </AuthContext.Provider>
     )

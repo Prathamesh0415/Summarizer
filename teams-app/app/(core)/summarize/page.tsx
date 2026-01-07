@@ -3,6 +3,7 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Loader2, AlertCircle } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 // 1. Import your custom hook
 import { useFetch } from "@/hooks/useFetch"; // Adjust path if needed
@@ -27,11 +28,15 @@ export default function SummarizerPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const { setUser } = useAuth()
+
   const handleSummarize = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     setSummary("");
+
+    let userUpdated = false
 
     try {
       // 3. Use your custom fetchWithAuth
@@ -51,6 +56,12 @@ export default function SummarizerPage() {
         // CACHE HIT: Standard JSON response
         const data = await response.json();
         setSummary(data.summary);
+
+        setUser(prev => prev ? {
+          ...prev,
+          credits: prev.credits - 1,
+          totalSummaries: prev.totalSummaries + 1
+        } : prev)
       } else {
         // STREAM: Reading the ReadableStream
         const reader = response.body?.getReader();
@@ -64,7 +75,18 @@ export default function SummarizerPage() {
           
           const text = decoder.decode(value, { stream: true });
           setSummary((prev) => prev + text); // Real-time append
+          
+          if(!userUpdated){
+            setUser(prev => prev ? {
+                  ...prev,
+                  credits: prev.credits - 1,
+                  totalSummaries: prev.totalSummaries + 1
+                } : prev)
+          } 
+          userUpdated = true
         }
+
+
       }
     } catch (err: any) {
       console.error("Summarization Error:", err);

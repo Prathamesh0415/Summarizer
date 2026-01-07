@@ -153,76 +153,75 @@ export default function DashboardPage() {
         </div>
         
         {/* Added w-full here */}
-        <div className="rounded-md border-2 border-muted bg-background w-full">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-b-2 border-muted hover:bg-muted/20">
-                {/* 1. Title */}
-                <TableHead className="w-1/2 text-center px-15">Content Title</TableHead>
-                {/* 2. Type */}
-                <TableHead className="text-center ">Type</TableHead>
-                {/* 3. Date (Aligned Right) */}
-                <TableHead className="text-center px-30">Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isSummariesLoading ? (
-                 <TableRow>
-                   {/* ColSpan reduced to 3 */}
-                   <TableCell colSpan={3} className="h-24 text-center">
-                      <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                        <Loader2 className="h-4 w-4 animate-spin" /> Loading history...
-                      </div>
-                   </TableCell>
-                 </TableRow>
-              ) : recentSummaries.length === 0 ? (
-                 <TableRow>
-                   <TableCell colSpan={3} className="h-24 text-center text-muted-foreground">
-                      No summaries found. Start by creating one!
-                   </TableCell>
-                 </TableRow>
-              ) : (
-                recentSummaries.map((summary) => (
-                  <TableRow key={summary._id} className="border-b border-muted hover:bg-muted/10 ">
-                    {/* 1. Title Cell */}
-                    <TableCell className="font-medium p-5">
-                      <div className="flex items-center gap-3">
-                         <div className={`h-8 w-8 rounded border flex items-center justify-center text-[10px] font-bold shrink-0
-                           ${summary.type === 'video' 
-                             ? 'bg-red-100 border-red-200 text-red-600' 
-                             : 'bg-blue-100 border-blue-200 text-blue-600'
-                           }`}
-                         >
-                           {summary.type === 'video' ? 'YT' : 'DOC'}
-                         </div>
-                         <span className="truncate max-w-[200px] md:max-w-[400px]" title={summary.title}>
-                           {summary.title}
-                         </span>
-                      </div>
-                    </TableCell>
 
-                    {/* 2. Type Cell */}
-                    <TableCell className="px-10">
-                      <Badge variant="outline" className={`capitalize border
-                        ${summary.type === 'video' 
-                          ? 'bg-red-50 text-red-700 border-red-200' 
-                          : 'bg-blue-50 text-blue-700 border-blue-200'
-                        }`}
-                      >
-                        {summary.type}
-                      </Badge>
-                    </TableCell>
 
-                    {/* 3. Date Cell (Right Aligned) */}
-                    <TableCell className="text-center px-5">
-                      {new Date(summary.createdAt).toLocaleDateString()}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+<div className="w-full rounded-md border-2 border-muted bg-background">
+  {/* Header Row */}
+  <div className="grid grid-cols-12 gap-4 border-b-2 border-muted p-4 font-medium text-muted-foreground">
+    <div className="col-span-6">Content Title</div>
+    <div className="col-span-3 text-center">Type</div>
+    <div className="col-span-3 text-center">Date</div>
+  </div>
+
+  {/* Body Content */}
+  <div className="flex flex-col">
+    {isSummariesLoading ? (
+      /* Loading State */
+      <div className="flex h-24 items-center justify-center gap-2 text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading history...
+      </div>
+    ) : recentSummaries.length === 0 ? (
+      /* Empty State */
+      <div className="flex h-24 items-center justify-center text-muted-foreground">
+        No summaries found. Start by creating one!
+      </div>
+    ) : (
+      /* Data Rows */
+      recentSummaries.map((summary) => (
+        <div
+          key={summary._id}
+          className="grid grid-cols-12 gap-4 border-b border-muted p-4 transition-colors hover:bg-muted/10 items-center"
+        >
+          {/* 1. Title Column */}
+          <div className="col-span-6 flex items-center gap-3 overflow-hidden">
+            <div
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded border text-[10px] font-bold
+                ${
+                  summary.type === "video"
+                    ? "bg-red-100 border-red-200 text-red-600"
+                    : "bg-blue-100 border-blue-200 text-blue-600"
+                }`}
+            >
+              {summary.type === "video" ? "YT" : "DOC"}
+            </div>
+            <span className="truncate font-medium" title={summary.title}>
+              {summary.title}
+            </span>
+          </div>
+
+          {/* 2. Type Column */}
+          <div className="col-span-3 flex justify-center">
+            <Badge
+              variant="outline"
+              className={`capitalize border ${
+                summary.type === "video"
+                  ? "bg-red-50 text-red-700 border-red-200"
+                  : "bg-blue-50 text-blue-700 border-blue-200"
+              }`}
+            >
+              {summary.type}
+            </Badge>
+          </div>
+
+          {/* 3. Date Column */}
+          <div className="col-span-3 text-center text-sm text-muted-foreground">
+            {new Date(summary.createdAt).toLocaleDateString()}
+          </div>
         </div>
+      ))
+    )}
+  </div>
+</div>
       </div>
 
     </div>
