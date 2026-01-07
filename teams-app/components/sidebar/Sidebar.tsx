@@ -96,6 +96,13 @@ export function SidebarNav({ isCollapsed }: { isCollapsed?: boolean }) {
         icon={CreditCard} 
         isCollapsed={isCollapsed} 
       />
+
+      <NavButton 
+        href="/orders" 
+        label="Order History" 
+        icon={CreditCard} 
+        isCollapsed={isCollapsed} 
+      />
     </nav>
   );
 }

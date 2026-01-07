@@ -4,6 +4,8 @@ import Stripe from "stripe"
 import { User } from "@/models/User"
 import connectDB from "@/lib/db"
 import { PLANS } from "@/lib/plans"
+import { Order } from "@/models/Order";
+
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
@@ -46,6 +48,10 @@ export async function POST(req: Request) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const userId = session.metadata?.userId;
+    const amount = session.amount_total;
+    const currency = session.currency;
+    const stripeSessionId = session.id;
+    const paymentIntentId = session.payment_intent as string;
 
     // Retrieve line items to find which package was bought
     const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
@@ -60,6 +66,17 @@ export async function POST(req: Request) {
         planName: name, // Optional: Update their "Badge" to the latest pack bought
         // Note: We don't save subscriptionId anymore
       });
+
+      await Order.create({
+          userId,
+          stripeSessionId,
+          stripePaymentIntentId: paymentIntentId,
+          amount,
+          currency,
+          creditsAdded: credits,
+          planName: name,
+          status: "success",
+        })
     }
   }
 
