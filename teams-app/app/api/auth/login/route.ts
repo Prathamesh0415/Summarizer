@@ -47,13 +47,19 @@ export async function POST(req: NextRequest){
             }, { status: 400 });
         }
 
-        // 2. Use validated data
         const { email, password } = validation.data;
 
         const user = await User.findOne({email})
         if(!user){
             return NextResponse.json(
                 {error: "Invalid credentials"},
+                {status: 401}
+            )
+        }
+
+        if(user && user.isGoogle){
+            return NextResponse.json(
+                {error: "Email used in Google login"},
                 {status: 401}
             )
         }
@@ -123,6 +129,7 @@ export async function POST(req: NextRequest){
         return response
 
     }catch(error){
+        console.log(error)
         return NextResponse.json({
             error: "Internal Server error at login"
         }, {status: 500})

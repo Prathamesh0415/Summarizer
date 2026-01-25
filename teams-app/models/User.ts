@@ -1,4 +1,5 @@
 import { Schema, model, models, Types } from "mongoose";
+import { boolean } from "zod";
 
 export type UserRole = "USER" | "ADMIN";
 
@@ -55,7 +56,14 @@ const UserSchema = new Schema(
     totalSummaries: {
       type: Number,
       default: 0
+    },
+
+    isGoogle: {
+      type: boolean,
+      default: false
     }
+
+  
 
     // teams: [
     //   {

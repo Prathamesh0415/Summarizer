@@ -66,9 +66,8 @@ export async function GET(req: NextRequest){
                 email: profile.email,
                 emailVerified: true,
                 planName: "free",
-                //username: profile.name,
-                //authProvider: "google",
-                credits: 5, // welcome credits
+                isGoogle: true,
+                credits: 5,
             });
         }
 
@@ -85,10 +84,6 @@ export async function GET(req: NextRequest){
         })
 
         const accessToken = await signAccessToken({userId: user._id, sessionId})
-
-        // const response =  NextResponse.json({
-        //             accessToken,
-        // })
 
         const response = NextResponse.redirect(new URL("/dashboard", req.url))
     
