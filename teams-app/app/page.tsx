@@ -117,8 +117,8 @@ export default function SummarizerLandingPage() {
                 <Link href="#features" className="text-lg font-medium hover:underline">Features</Link>
                 <Link href="#pricing" className="text-lg font-medium hover:underline">Pricing</Link>
                 <Separator className="my-2" />
-                <Button variant="outline" className="w-full border-2 border-black">Login</Button>
-                <Button className="w-full border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">Register</Button>
+                <Link href="/login"></Link><Button variant="outline" className="w-full border-2 border-black">Login</Button>
+                <Link href="/register"></Link><Button className="w-full border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">Register</Button>
               </div>
             </SheetContent>
           </Sheet>

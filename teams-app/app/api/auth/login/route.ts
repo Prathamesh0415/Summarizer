@@ -37,7 +37,6 @@ export async function POST(req: NextRequest){
         await dbConnect()
         const body = await req.json()
 
-        // 1. Zod Validation
         const validation = loginSchema.safeParse(body);
 
         if (!validation.success) {
@@ -100,7 +99,6 @@ export async function POST(req: NextRequest){
 
         const accessToken = await signAccessToken({
             userId: user._id.toString(),
-            //role: user.role,
             sessionId
         })
 

@@ -16,34 +16,28 @@ interface AuthContextType {
     user: User | null;
     setUser: React.Dispatch<React.SetStateAction<User | null>>
     setAccessToken: (token: string | null) => void;
-    isLoading: boolean; // Add loading state so you don't redirect while checking auth
+    isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children } : {children: ReactNode}){
     const [accessToken, setAccessToken] = useState<string | null>(null)
-    const [isLoading, setIsLoading] = useState(true) // Start loading by default
+    const [isLoading, setIsLoading] = useState(true) 
     const [user, setUser] = useState<User | null>(null)
 
     useEffect(() => {
-        // Define the silent refresh logic
         const refreshAuth = async () => {
             try {
-                // Call your backend refresh endpoint
-                // The browser automatically attaches the HttpOnly cookie!
                 const res = await fetch("/api/auth/refresh", {
                     method: "POST", 
                 });
-
-                console.log(res)
 
                 if (res.ok) {
                     const data = await res.json();
                     setAccessToken(data.accessToken);
                     setUser(data.user)
                 } else {
-                    // If refresh fails (token expired/invalid), ensure we are logged out
                     setAccessToken(null);
                     setUser(null)
                 }
@@ -52,7 +46,7 @@ export function AuthProvider({ children } : {children: ReactNode}){
                 setAccessToken(null);
                 setUser(null)
             } finally {
-                setIsLoading(false); // Auth check is done
+                setIsLoading(false);
             }
         };
 

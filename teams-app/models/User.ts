@@ -63,14 +63,6 @@ const UserSchema = new Schema(
       default: false
     }
 
-  
-
-    // teams: [
-    //   {
-    //     type: Types.ObjectId,
-    //     ref: "Team",
-    //   },
-    // ],
   },
   { timestamps: true }
 );
