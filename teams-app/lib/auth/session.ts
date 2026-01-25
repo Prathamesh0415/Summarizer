@@ -1,9 +1,9 @@
 import crypto from "crypto"
-import redis from "../redis" // Assuming this is ioredis instance
+import redis from "../redis" 
 
 interface Session {
     sessionId: string;
-    [key: string]: any; // Changed to 'any' to accommodate numbers/nulls from Redis
+    [key: string]: any; 
 }
 
 export function generateRefreshToken(): string{
@@ -14,33 +14,28 @@ export function hashToken(token: string): string{
     return crypto.createHash("sha256").update(token).digest("hex")
 }
 
-// 1. ADDED 'role' to the interface so it can be saved
 export async function createSession({
     userId,
     sessionId,
     refreshToken,
     ip,
     userAgent,
-    role 
 }: {
     userId: string
     sessionId: string
     refreshToken: string
     ip: string
     userAgent: string
-    role: string 
 })  {
     const tokenHash = hashToken(refreshToken)
 
-    // 2. FIXED TYPO: 'referesh' -> 'refresh' (Standardize this!)
     await redis.set(
         `refresh:${sessionId}`, 
         JSON.stringify({ 
             hash: tokenHash,
             userId: userId, 
-            role: role 
         }),
-        "EX", // 3. FIXED SYNTAX: ioredis requires "EX" for expiry
+        "EX",
         60 * 60 * 24 * 7 
     )
 
@@ -51,17 +46,16 @@ export async function createSession({
         createdAt: Date.now().toString()
     })
 
-    // 4. FIXED SYNTAX: Missing '$' in template string
     await redis.expire(`session:${sessionId}`, 60 * 60 * 24 * 7)
 
-    // 5. FIXED TYPO: Standardized to 'user_sessions' (Plural) everywhere
     await redis.sadd(`user_sessions:${userId}`, sessionId)
 }
 
 export async function deleteSession(sessionId: string, userId: string){
-    const pipeline = redis.pipeline()
     
-    // Standardized keys
+    //pipeline created to perform multiple operations in one go rather than waiting for one to finish then starting the next
+    const pipeline = redis.pipeline()
+
     pipeline.del(`refresh:${sessionId}`) 
     pipeline.del(`session:${sessionId}`)
     pipeline.srem(`user_sessions:${userId}`, sessionId)
@@ -70,24 +64,23 @@ export async function deleteSession(sessionId: string, userId: string){
 }
 
 export async function deleteAllSessions(userId: string){
-    // FIXED TYPO: user_sessions (Plural)
+
     const sessionIds = await redis.smembers(`user_sessions:${userId}`)
 
-    // Create a pipeline for deletion (Faster than await loop)
     const pipeline = redis.pipeline(); 
 
     for(const id of sessionIds){
-        pipeline.del(`refresh:${id}`) // Standardized key
+        pipeline.del(`refresh:${id}`) 
         pipeline.del(`session:${id}`)
     }
     
-    pipeline.del(`user_sessions:${userId}`) // Delete the set itself
+    pipeline.del(`user_sessions:${userId}`)
     
     await pipeline.exec();
 }
 
 export async function getUserSessions(userId: string){
-    // FIXED TYPO: user_sessions (Plural)
+
     const sessionIds = await redis.smembers(`user_sessions:${userId}`)
     
     if(sessionIds.length === 0){
@@ -108,7 +101,7 @@ export async function getUserSessions(userId: string){
     const sessions: Session[] = []
 
     sessionIds.forEach((sid, index) => {
-        // ioredis pipeline returns [error, result]
+        
         const [err, sessionData] = result[index] as [Error | null, any]; 
 
         if(!err && sessionData && Object.keys(sessionData).length > 0){

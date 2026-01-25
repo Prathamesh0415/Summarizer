@@ -80,7 +80,6 @@ export async function GET(req: NextRequest){
             refreshToken,
             ip: req.headers.get("x-forwarded-for") ?? "",
             userAgent: req.headers.get("user-agent") ?? "",
-            role: user.role
         })
 
         const accessToken = await signAccessToken({userId: user._id, sessionId})

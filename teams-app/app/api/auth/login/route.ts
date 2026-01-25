@@ -96,7 +96,6 @@ export async function POST(req: NextRequest){
             refreshToken,
             ip: req.headers.get("x-forwared-for") ?? "",
             userAgent: req.headers.get("user-agent") ?? "",
-            role: user.role
         })
 
         const accessToken = await signAccessToken({

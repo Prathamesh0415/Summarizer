@@ -1,8 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 
-const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
-
-const SECRET_KEY = new TextEncoder().encode(ACCESS_TOKEN_SECRET);
+const SECRET_KEY = new TextEncoder().encode(process.env.ACCESS_TOKEN_SECRET);
 
 export interface AccessTokenPayload {
   userId: string;
@@ -25,8 +23,6 @@ export async function verifyAccessToken(token: string) {
     const { payload } = await jwtVerify(token, SECRET_KEY, {
       algorithms: ["HS256"],
     });
-
-    console.log(payload)
 
     if (
       typeof payload !== "object" ||
