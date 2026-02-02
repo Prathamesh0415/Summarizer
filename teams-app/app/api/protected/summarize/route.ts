@@ -8,9 +8,11 @@ import Summary from "@/models/Summary";
 import { getAuthContext } from "@/lib/auth/context";
 import { User } from "@/models/User";
 
-import { JSDOM } from "jsdom"
-import { Readability } from "@mozilla/readability";
+import * as cheerio from "cheerio";
 import { chromium } from "playwright";
+
+// ⬅️ VERY IMPORTANT
+export const runtime = "nodejs";
 
 // =======================
 // OpenAI Init
@@ -38,21 +40,32 @@ async function fetchHtml(url: string): Promise<string> {
   return await res.text();
 }
 
-function extractWithReadability(html: string, url: string) {
-  const dom = new JSDOM(html, { url });
-  const reader = new Readability(dom.window.document);
-  const article = reader.parse();
+// =======================
+// Cheerio Extraction
+// =======================
+function extractWithCheerio(html: string) {
+  const $ = cheerio.load(html);
 
-  if (!article || !article.textContent || article.textContent.length < 300) {
+  // Remove noise
+  $("script, style, noscript, iframe, nav, footer, header, ads").remove();
+
+  const title =
+    $("meta[property='og:title']").attr("content") ||
+    $("title").text() ||
+    "Web Article";
+
+  const content = $("body").text().replace(/\s+/g, " ").trim();
+
+  if (!content || content.length < 300) {
     throw new Error("Insufficient readable content");
   }
 
-  return {
-    title: article.title || "Web Article",
-    content: article.textContent,
-  };
+  return { title, content };
 }
 
+// =======================
+// Playwright Fallback
+// =======================
 async function extractWithPlaywright(url: string) {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
@@ -62,7 +75,7 @@ async function extractWithPlaywright(url: string) {
 
   await browser.close();
 
-  return extractWithReadability(html, url);
+  return extractWithCheerio(html);
 }
 
 // =======================
@@ -70,24 +83,17 @@ async function extractWithPlaywright(url: string) {
 // =======================
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { url } = body;
+    const { url } = await req.json();
 
     if (!url) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 });
     }
 
-    // =======================
-    // SSRF Protection
-    // =======================
     const parsedUrl = new URL(url);
     if (isPrivateHost(parsedUrl.hostname)) {
       return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
     }
 
-    // =======================
-    // Auth & User
-    // =======================
     const { userId } = getAuthContext(req);
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -103,9 +109,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // =======================
-    // Rate Limit
-    // =======================
     const ip = req.headers.get("x-forwarded-for") || "unknown";
     const { allowed } = await rateLimit({
       key: `rl:summarize:${ip}`,
@@ -120,9 +123,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // =======================
-    // Cache Check (Web only)
-    // =======================
     const cacheKey = `summary:v2:${hashToken(url)}`;
     const cached = await redis.get(cacheKey);
 
@@ -143,14 +143,14 @@ export async function POST(req: NextRequest) {
     }
 
     // =======================
-    // Content Extraction
+    // Extraction Logic
     // =======================
     let title = "Web Article";
     let content = "";
 
     try {
       const html = await fetchHtml(url);
-      const extracted = extractWithReadability(html, url);
+      const extracted = extractWithCheerio(html);
       title = extracted.title;
       content = extracted.content;
     } catch {
@@ -159,9 +159,6 @@ export async function POST(req: NextRequest) {
       content = fallback.content;
     }
 
-    // =======================
-    // Truncate (safe)
-    // =======================
     const input = content.slice(0, 12000);
 
     // =======================
@@ -188,17 +185,17 @@ export async function POST(req: NextRequest) {
         try {
           for await (const chunk of stream) {
             const text = chunk.choices[0]?.delta?.content;
-            if (text) {
-              if (!charged) {
-                await User.findByIdAndUpdate(userId, {
-                  $inc: { credits: -1, totalSummaries: 1 },
-                });
-                charged = true;
-              }
+            if (!text) continue;
 
-              finalSummary += text;
-              controller.enqueue(encoder.encode(text));
+            if (!charged) {
+              await User.findByIdAndUpdate(userId, {
+                $inc: { credits: -1, totalSummaries: 1 },
+              });
+              charged = true;
             }
+
+            finalSummary += text;
+            controller.enqueue(encoder.encode(text));
           }
 
           await Summary.create({
@@ -225,7 +222,7 @@ export async function POST(req: NextRequest) {
         Connection: "keep-alive",
       },
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error(err);
     return NextResponse.json(
       { error: "Internal Server Error" },
