@@ -8,7 +8,7 @@ import Summary from "@/models/Summary";
 import { getAuthContext } from "@/lib/auth/context";
 import { User } from "@/models/User";
 
-import { JSDOM } from "jsdom";
+import { JSDOM } from "jsdom"
 import { Readability } from "@mozilla/readability";
 import { chromium } from "playwright";
 
