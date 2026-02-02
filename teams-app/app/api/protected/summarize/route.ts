@@ -46,7 +46,6 @@ async function fetchHtml(url: string): Promise<string> {
 function extractWithCheerio(html: string) {
   const $ = cheerio.load(html);
 
-  // Remove noise
   $("script, style, noscript, iframe, nav, footer, header, ads").remove();
 
   const title =
@@ -123,8 +122,56 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // =======================
+    // YOUTUBE DETECTION
+    // =======================
+    const isYoutube =
+      url.includes("youtube.com") || url.includes("youtu.be");
+
+    let videoId: string | null = null;
+
+    if (isYoutube) {
+      const match = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
+      videoId = match ? match[1] : null;
+
+      if (!videoId) {
+        return NextResponse.json(
+          { error: "Invalid YouTube URL" },
+          { status: 400 }
+        );
+      }
+
+      // -----------------------
+      // MongoDB Cache ONLY
+      // -----------------------
+      const existing = await Summary.findOne({ url });
+
+      if (existing) {
+        await User.findByIdAndUpdate(userId, {
+          $inc: { credits: -1, totalSummaries: 1 },
+        });
+
+        await Summary.create({
+          userId,
+          url,
+          title: existing.title,
+          summary: existing.summary,
+          type: "video",
+          videoDuration: existing.videoDuration,
+        });
+
+        return NextResponse.json({
+          summary: existing.summary,
+          source: "mongodb",
+        });
+      }
+    }
+
+    // =======================
+    // WEBSITE CACHE (REDIS)
+    // =======================
     const cacheKey = `summary:v2:${hashToken(url)}`;
-    const cached = await redis.get(cacheKey);
+    const cached = !isYoutube ? await redis.get(cacheKey) : null;
 
     if (cached) {
       await User.findByIdAndUpdate(userId, {
@@ -143,26 +190,59 @@ export async function POST(req: NextRequest) {
     }
 
     // =======================
-    // Extraction Logic
+    // CONTENT EXTRACTION
     // =======================
     let title = "Web Article";
     let content = "";
 
-    try {
-      const html = await fetchHtml(url);
-      const extracted = extractWithCheerio(html);
-      title = extracted.title;
-      content = extracted.content;
-    } catch {
-      const fallback = await extractWithPlaywright(url);
-      title = fallback.title;
-      content = fallback.content;
+    if (isYoutube && videoId) {
+      const transcriptRes = await fetch(
+        "https://www.youtube-transcript.io/api/transcripts",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Basic ${process.env.YOUTUBE_TRANSCRIPT_API_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ ids: [videoId] }),
+        }
+      );
+
+      if (!transcriptRes.ok) {
+        return NextResponse.json(
+          { error: "Transcript not available" },
+          { status: 400 }
+        );
+      }
+
+      const data = await transcriptRes.json();
+
+      if (!Array.isArray(data) || !data[0]?.text) {
+        return NextResponse.json(
+          { error: "Transcript not found" },
+          { status: 400 }
+        );
+      }
+
+      title = data[0].title || "YouTube Video";
+      content = data[0].text;
+    } else {
+      try {
+        const html = await fetchHtml(url);
+        const extracted = extractWithCheerio(html);
+        title = extracted.title;
+        content = extracted.content;
+      } catch {
+        const fallback = await extractWithPlaywright(url);
+        title = fallback.title;
+        content = fallback.content;
+      }
     }
 
     const input = content.slice(0, 12000);
 
     // =======================
-    // OpenAI Streaming
+    // OPENAI STREAMING
     // =======================
     const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -203,10 +283,12 @@ export async function POST(req: NextRequest) {
             url,
             title,
             summary: finalSummary,
-            type: "website",
+            type: isYoutube ? "video" : "website",
           });
 
-          await redis.set(cacheKey, finalSummary, "EX", 300);
+          if (!isYoutube) {
+            await redis.set(cacheKey, finalSummary, "EX", 300);
+          }
         } catch (err) {
           console.error("Streaming error:", err);
         } finally {
